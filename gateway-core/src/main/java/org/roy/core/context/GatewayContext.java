@@ -1,6 +1,7 @@
 package org.roy.core.context;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.ReferenceCountUtil;
 import lombok.Value;
 import org.roy.common.rules.Rule;
 import org.roy.common.util.AssertUtil;
@@ -93,11 +94,59 @@ public class GatewayContext extends  BaseContext {
         return (T) attributes.getOrDefault(key,defaultValue);
     }
 
-    public Rule.FilterConfig getFilterConfig(String filterId){
-       return rule.getFilterConfigById(filterId);
+    public Rule.FilterConfig getFilterConfig(String filterId) {
+        return rule.getFilterConfigById(filterId);
     }
 
+    /**
+     * 获取服务ID
+     * @return
+     */
     public  String getUniqueId(){
         return request.getUniqueId();
+    }
+
+    /**
+     * 重写父类释放资源,
+      */
+    public  boolean releaseRequest(){
+        if (requestReleased.compareAndSet(false,true)){
+            ReferenceCountUtil.release(request.getFullHttpRequest());
+            return  true;
+        }
+        return  false;
+    }
+
+    /**
+     * 获取原始请求对象
+     * @return
+     */
+    public  GatewayRequest getOriginRequest(){
+        return  request;
+    }
+
+    @Override
+    public GatewayRequest getRequest() {
+        return request;
+    }
+    @Override
+    public GatewayResponse getResponse() {
+        return response;
+    }
+
+    public Rule getRule() {
+        return rule;
+    }
+
+    public void setRequest(GatewayRequest request) {
+        this.request = request;
+    }
+
+    public void setResponse(Object response) {
+        this.response = (GatewayResponse) response;
+    }
+
+    public void setRule(Rule rule) {
+        this.rule = rule;
     }
 }

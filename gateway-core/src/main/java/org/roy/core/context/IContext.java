@@ -40,7 +40,7 @@ public interface IContext {
     /*
     * 设置上下文为标记写回
     * */
-    void Writtened();
+    void writtened();
 
     /*
     * 设置上下文状态为写回结束
@@ -69,6 +69,8 @@ public interface IContext {
     * 获取返回对象
     * */
     Object getRequest();
+
+    Object getResponse();
 
     Throwable getThrowable();
 
@@ -106,6 +108,6 @@ public interface IContext {
     /*
     * 执行函数
     * */
-    void  invokeCompletedCallBack(Consumer<IContext> contextConsumer);
+    void  invokeCompletedCallBack();
 
 }

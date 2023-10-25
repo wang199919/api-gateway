@@ -35,8 +35,6 @@ public class GatewayRequest implements  IGatewayRequest{
     @Getter
     private  final  long beginTime;
     //进入网关的结束时间
-    @Getter
-    private  final  long endTime;
 
     //字符集
     @Getter
@@ -65,7 +63,7 @@ public class GatewayRequest implements  IGatewayRequest{
 
     //请求格式
     @Getter
-    private  final  HttpMethod contentType;
+    private  final  String contentType;
 
     //请求头
     @Getter
@@ -99,41 +97,36 @@ public class GatewayRequest implements  IGatewayRequest{
     //构建下游请求时的Http构建器
     private  final RequestBuilder requestBuilder;
 
-    public GatewayRequest(String uniqueId, long beginTime,
-                          long endTime, Charset charset, String clientIP,
-                          String host, String path, String URI,
-                          HttpMethod httpMethod, HttpMethod contentType,
-                          HttpHeaders httpHeader, QueryStringDecoder queryStringDecoder,
-                          FullHttpRequest fullHttpRequest, RequestBuilder requestBuilder) {
+    public GatewayRequest(String uniqueId, Charset charset, String clientIp, String host, String uri, HttpMethod method, String contentType, HttpHeaders headers, FullHttpRequest fullHttpRequest) {
         this.uniqueId = uniqueId;
         this.beginTime = TimeUtil.currentTimeMillis();
-        this.endTime = endTime;
         this.charset = charset;
-        this.clientIP = clientIP;
+        this.clientIP = clientIp;
         this.host = host;
-        this.URI = URI;
-        this.httpMethod = httpMethod;
+        this.URI = uri;
+        this.httpMethod = method;
         this.contentType = contentType;
-        this.httpHeader = httpHeader;
-        this.queryStringDecoder = new QueryStringDecoder(URI,charset);
+        this.httpHeader = headers;
         this.fullHttpRequest = fullHttpRequest;
-        this.path=queryStringDecoder.path();
-        this.requestBuilder =new RequestBuilder();
+        this.queryStringDecoder = new QueryStringDecoder(uri,charset);
+        this.path  = queryStringDecoder.path();
+        this.modifyHost = host;
+        this.modifyPath = path;
 
-        this.modifyHost=host;
-        this.modifyPath=path;
-        this.modifyScheme= BasicConst.HTTP_PREFIX_SEPARATOR;
+        this.modifyScheme = BasicConst.HTTP_PREFIX_SEPARATOR;
+        this.requestBuilder = new RequestBuilder();
         this.requestBuilder.setMethod(getHttpMethod().name());
         this.requestBuilder.setHeaders(getHttpHeader());
         this.requestBuilder.setQueryParams(queryStringDecoder.parameters());
 
-        ByteBuf contentBuffer=fullHttpRequest.content();
+        ByteBuf contentBuffer = fullHttpRequest.content();
         if(Objects.nonNull(contentBuffer)){
             this.requestBuilder.setBody(contentBuffer.nioBuffer());
         }
-
-
     }
+
+
+
 
     //获取body
     public  String getBody(){
@@ -145,18 +138,19 @@ public class GatewayRequest implements  IGatewayRequest{
 
     //获取Cookie
     public Cookie getCookie(String name){
-        if(cookieMap==null){
-            cookieMap=new HashMap<>();
-            String cookieStr=getHttpHeader().get(HttpHeaderNames.COOKIE);
-            Set<Cookie> cookies= ServerCookieDecoder.STRICT.decode(cookieStr);
-            for(Cookie cookie:cookies){
+        if(cookieMap == null){
+            cookieMap = new HashMap<String,io.netty.handler.codec.http.cookie.Cookie>();
+            String cookieStr = getHttpHeader().get(HttpHeaderNames.COOKIE);
+            Set<io.netty.handler.codec.http.cookie.Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieStr);
+            for(io.netty.handler.codec.http.cookie.Cookie cookie: cookies){
                 cookieMap.put(name,cookie);
             }
         }
-        return  cookieMap.get(name)
-                ;
+        return cookieMap.get(name);
     }
-
+    public boolean getCookieALL(){
+       return cookieMap.isEmpty();
+    }
     //获取请求参数值
     public  List<String> getQueryParametersMultiple(String name){
         return queryStringDecoder.parameters().get(name);
@@ -182,72 +176,73 @@ public class GatewayRequest implements  IGatewayRequest{
 
     private boolean isFormPost() {
         return HttpMethod.POST.equals(httpMethod) &&
-                (contentType.asciiName().startsWith(HttpHeaderValues.FORM_DATA.toString()) ||
-                        contentType.asciiName().startsWith(HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString()));
+                (contentType.startsWith(HttpHeaderValues.FORM_DATA.toString()) ||
+                        contentType.startsWith(HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString()));
     }
 
     private boolean isJsonPost() {
         return HttpMethod.POST.equals(httpMethod) &&
-                contentType.asciiName().startsWith(HttpHeaderValues.APPLICATION_JSON.toString());
+                contentType.startsWith(HttpHeaderValues.APPLICATION_JSON.toString());
     }
 
     @Override
     public void setModifyHost(String host) {
-
+        this.modifyHost=host;
     }
 
     @Override
     public String getModifyHost() {
-        return null;
+        return modifyHost;
     }
 
     @Override
     public void setModifyPath(String path) {
-
+        this.modifyPath=path;
     }
 
     @Override
     public String getModifyPath() {
-        return null;
+        return modifyPath;
     }
 
     @Override
     public void addHeader(CharSequence name, String value) {
-
+        requestBuilder.addHeader(name,value);
     }
 
     @Override
     public void setHeader(CharSequence name, String value) {
-
+        requestBuilder.setHeader(name,value);
     }
 
     @Override
     public void addQueryParam(String name, String value) {
-
+        requestBuilder.addQueryParam(name,value);
     }
 
     @Override
     public void addFormParam(String name, String value) {
-
+        requestBuilder.addFormParam(name,value);
     }
 
     @Override
     public void addOrReplaceCookie(Cookie cookie) {
-
+        requestBuilder.addOrReplaceCookie(cookie);
     }
 
     @Override
     public void setRequestTimeOut(int requestTimeOut) {
-
+        requestBuilder.setRequestTimeout(requestTimeOut);
     }
 
     @Override
-    public void getFinalUrl() {
-
+    public String getFinalUrl() {
+        return modifyScheme+modifyHost+modifyPath;
     }
 
     @Override
     public Request build() {
-        return null;
+        requestBuilder.setUrl(getFinalUrl());
+        return requestBuilder.build();
     }
 }

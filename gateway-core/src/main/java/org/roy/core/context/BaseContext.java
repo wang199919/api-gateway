@@ -54,7 +54,7 @@ public class BaseContext implements IContext{
     }
 
     @Override
-    public void Writtened() {
+    public void writtened() {
 
   status=IContext.Written;
     }
@@ -100,6 +100,11 @@ public class BaseContext implements IContext{
     }
 
     @Override
+    public Object getResponse() {
+        return null;
+    }
+
+    @Override
     public Throwable getThrowable() {
   return throwable;
     }
@@ -138,7 +143,7 @@ public class BaseContext implements IContext{
     }
 
     @Override
-    public void invokeCompletedCallBack(Consumer<IContext> contextConsumer) {
+    public void invokeCompletedCallBack() {
 if(completedCallBacks!=null){
  completedCallBacks.forEach(call-> call.accept(this));
 }

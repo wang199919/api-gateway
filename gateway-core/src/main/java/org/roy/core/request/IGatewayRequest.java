@@ -43,7 +43,7 @@ public interface IGatewayRequest {
     void  setRequestTimeOut(int requestTimeOut);
 
     //获取最终请求路径包含请求参数,Http://localhost:8081/api/admin?name=111......
-    void  getFinalUrl();
+    String  getFinalUrl();
 
     Request build();
 }
