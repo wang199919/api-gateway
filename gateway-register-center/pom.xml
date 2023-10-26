@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gateway-register-center</artifactId>
+    <packaging>pom</packaging>
     <build>
         <plugins>
             <plugin>
@@ -22,6 +23,10 @@
             </plugin>
         </plugins>
     </build>
+    <modules>
+        <module>gateway-register-center-api</module>
+        <module>gateway-register-center-nacos-impl</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>

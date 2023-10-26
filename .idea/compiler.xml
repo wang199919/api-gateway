@@ -11,7 +11,7 @@
         <module name="gateway-client" />
         <module name="backed-dubbo-server" />
         <module name="gateway-common" />
-        <module name="gateway-register-center" />
+        <module name="gateway-register-center-api" />
         <module name="gateway-core" />
         <module name="gateway-config-center" />
       </profile>

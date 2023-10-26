@@ -18,7 +18,6 @@ public class AsyncHttpHelper {
 	}
 	
 	public static AsyncHttpHelper getInstance() {
-		System.out.println("获取asyncHttphelper");
 		return SingletonHolder.INSTANCE;
 	}
 	

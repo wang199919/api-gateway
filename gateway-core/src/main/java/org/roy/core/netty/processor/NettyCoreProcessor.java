@@ -38,13 +38,6 @@ public class NettyCoreProcessor implements NettyProcessor {
         ChannelHandlerContext context = wrapper.getContext();
         try {
             GatewayContext gatewayContext= RequestHelper.doContext(fullHttpRequest,context);
-            System.out.println(gatewayContext.getRequest().getHttpHeader());
-            try {
-                System.out.println(gatewayContext.request.getCookieALL());
-            }catch (Exception e){
-                System.out.println(e);
-            }
-
             route(gatewayContext);
         }catch (BaseException e){
             log.error("process error {} {}",e.getCode().getCode(),e.getCode().getCode());
