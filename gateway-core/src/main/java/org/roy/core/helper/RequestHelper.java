@@ -3,12 +3,14 @@ package org.roy.core.helper;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import org.apache.commons.lang3.StringUtils;
+import org.roy.common.config.DynamicConfigManager;
 import org.roy.common.config.HttpServiceInvoker;
 import org.roy.common.config.ServiceDefinition;
 import org.roy.common.config.ServiceInvoker;
 import org.roy.common.constants.BasicConst;
 import org.roy.common.constants.GatewayConst;
 import org.roy.common.constants.GatewayProtocol;
+import org.roy.common.exception.ResponseException;
 import org.roy.common.rules.Rule;
 import org.roy.core.context.GatewayContext;
 import org.roy.core.request.GatewayRequest;
@@ -20,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.roy.common.enums.ResponseCode.PATH_NO_MATCHED;
+
 
 public class RequestHelper {
 
@@ -29,14 +33,7 @@ public class RequestHelper {
 		GatewayRequest gateWayRequest = doRequest(request, ctx);
 		
 		//	根据请求对象里的uniqueId，获取资源服务信息(也就是服务定义信息)
-		ServiceDefinition serviceDefinition = ServiceDefinition.builder()
-				.serviceId("demo")
-				.enable(true)
-				.version("v1")
-				.patternPath("**")
-				.envType("dev")
-				.protocol(GatewayProtocol.HTTP)
-				.build();
+		ServiceDefinition serviceDefinition = DynamicConfigManager.getInstance().getServiceDefinition(gateWayRequest.getUniqueId());
 
 		
 		//	根据请求对象获取服务定义对应的方法调用，然后获取对应的规则
@@ -44,7 +41,10 @@ public class RequestHelper {
 		serviceInvoker.setInvokerPath(gateWayRequest.getPath());
 		serviceInvoker.setTimeout(500);
 
-		
+		//获取Rule
+
+		Rule rule=getRule(gateWayRequest,serviceDefinition.getServiceId());
+
 		//	构建我们而定GateWayContext对象
 		GatewayContext gatewayContext = new GatewayContext(
 				serviceDefinition.getProtocol(),
@@ -55,11 +55,19 @@ public class RequestHelper {
 
 
 		//后续服务发现做完，这里都要改成动态的
-		gatewayContext.getRequest().setModifyHost("127.0.0.1:8080");
-
+		//gatewayContext.getRequest().setModifyHost("127.0.0.1:8080");
 		return gatewayContext;
 	}
-	
+
+	private static Rule getRule(GatewayRequest request,String serviceID) {
+		String key= serviceID+"."+request.getPath();
+		DynamicConfigManager instance = DynamicConfigManager.getInstance();
+
+		Rule rule=instance.getRuleByPath(key);
+		if (rule!=null)return  rule;
+		return instance.getRuleByServiceId(serviceID).stream().filter(r->request.getPath().startsWith(r.getPrefix())).findAny().orElseThrow(()-> new ResponseException( PATH_NO_MATCHED));
+	}
+
 	/**
 	 *构建Request请求对象
 	 */
@@ -93,6 +101,12 @@ public class RequestHelper {
 	 * 获取客户端ip
 	 */
 	private static String getClientIp(ChannelHandlerContext ctx, FullHttpRequest request) {
+		//request.header 是一个map类型的数据结构
+		/* 结构如下:
+		request.headers().set(HttpHeaderNames.HOST, "localhost");
+		request.headers().set(HttpHeaderNames.ACCEPT, "application/json");
+		request.headers().set(HttpHeaderNames.CONTENT_TYPE, "application/json");
+		* */
 		String xForwardedValue = request.headers().get(BasicConst.HTTP_FORWARD_SEPARATOR);
 		
 		String clientIp = null;

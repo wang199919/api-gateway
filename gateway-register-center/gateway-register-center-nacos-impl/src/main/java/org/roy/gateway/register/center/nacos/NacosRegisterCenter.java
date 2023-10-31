@@ -12,7 +12,6 @@ import com.alibaba.nacos.api.naming.listener.NamingEvent;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.naming.pojo.Service;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
-import com.alibaba.nacos.client.naming.NacosNamingService;
 import com.alibaba.nacos.common.executor.NameThreadFactory;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -20,16 +19,14 @@ import org.roy.common.config.ServiceDefinition;
 import org.roy.common.config.ServiceInstance;
 import org.roy.common.constants.GatewayConst;
 
-import org.roy.common.util.TimeUtil;
 import org.roy.reister.api.RegisterCenter;
 import org.roy.reister.api.RegisterCenterListener;
 
-import javax.naming.Name;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +36,15 @@ import java.util.stream.Collectors;
  * @author: roy
  * @date: 2023/10/26 11:24
  * @description:
+ * 在网关服务的配置文件中添加Nacos相关配置，包括Nacos的地址、端口、命名空间等信息。
+ *
+ * 在网关服务的启动代码中，连接Nacos注册中心，并向Nacos注册该网关服务的信息，包括服务名、IP地址、端口等。
+ *
+ * 设置网关服务的路由规则，将客户端请求通过网关转发到对应的后端服务中。
+ *
+ * 监听Nacos注册中心的服务变化，当有新的后端服务注册到Nacos上或有服务下线时，更新网关的路由规则。
+ *
+ * 在网关服务中实现负载均衡，通过Nacos获取后端服务的实例列表，并实现请求的负载分发。
  */
 @Slf4j
 public class NacosRegisterCenter  implements RegisterCenter {
