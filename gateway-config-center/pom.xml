@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gateway-config-center</artifactId>
+    <packaging>pom</packaging>
     <build>
         <plugins>
             <plugin>
@@ -22,6 +23,10 @@
             </plugin>
         </plugins>
     </build>
+    <modules>
+        <module>gaeway-config-center-api</module>
+        <module>gateway-config-center-nocas</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>16</maven.compiler.source>

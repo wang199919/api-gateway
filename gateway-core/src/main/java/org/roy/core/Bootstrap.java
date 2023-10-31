@@ -8,10 +8,12 @@ import org.roy.common.config.ServiceInstance;
 import org.roy.common.util.JSONUtil;
 import org.roy.common.util.NetUtils;
 import org.roy.common.util.TimeUtil;
+import org.roy.gateway.config.center.api.ConfigCenter;
 import org.roy.reister.api.RegisterCenter;
 import org.roy.reister.api.RegisterCenterListener;
 
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 import static org.roy.common.constants.BasicConst.COLON_SEPARATOR;
@@ -29,10 +31,14 @@ public class Bootstrap {
         System.out.println(config);
         //插件初始化
         //配置中心管理器连接配置中心,监听配置的增删改查
+
+        ConfigCenter configCenter=null; //todo
+        configCenter.subscribeRulesChange(rules -> DynamicConfigManager.getInstance().putAllRule(rules));
+
+
         //启动容器
         Container container=new Container(config);
         container.start();
-        System.out.println(111111);
         //注册中心,实例加载到本地
         final RegisterCenter registerCenter = registerAndSubscribe(config);
         //服务优雅关机
@@ -46,12 +52,22 @@ public class Bootstrap {
     }
 
     private static RegisterCenter registerAndSubscribe(Config config) {
-        final RegisterCenter registerCenter=null;
+        ServiceLoader<RegisterCenter> serviceLoader=ServiceLoader.load(RegisterCenter.class);
+        final RegisterCenter registerCenter=serviceLoader.findFirst().orElseThrow(()->
+        {
+            return  new RuntimeException("not found RegisterCenter impl");
+        });
+        registerCenter.init(config.getRegistryAddress(),config.getEnv());
+
+
         //构造网关自定义与服务实例
         ServiceDefinition serviceDefinition= buildGatewayServiceDefinition(config);
         ServiceInstance serviceInstance=buildGatewayServiceInstance(config);
+
         //注册
         registerCenter.register(serviceDefinition,serviceInstance);
+
+
         //订阅
         registerCenter.subscribeAllServices(new RegisterCenterListener() {
             @Override

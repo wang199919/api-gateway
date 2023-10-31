@@ -8,13 +8,20 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="backend-http-server" />
+        <module name="gateway-register-center-nacos-impl" />
         <module name="gateway-client" />
         <module name="backed-dubbo-server" />
+        <module name="gateway-config-center-nocas" />
         <module name="gateway-common" />
         <module name="gateway-register-center-api" />
         <module name="gateway-core" />
-        <module name="gateway-config-center" />
+        <module name="gaeway-config-center-api" />
+        <module name="gateway-config-center-nacos" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="gateway-config-center-api" target="1.5" />
+      <module name="gateway-config-center-nacos" target="15" />
+    </bytecodeTargetLevel>
   </component>
 </project>

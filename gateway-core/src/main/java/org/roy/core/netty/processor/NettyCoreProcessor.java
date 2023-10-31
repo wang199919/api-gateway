@@ -15,6 +15,8 @@ import org.roy.common.exception.ResponseException;
 import org.roy.core.ConfigLoader;
 import org.roy.core.context.GatewayContext;
 import org.roy.core.context.HttpRequestWrapper;
+import org.roy.core.filter.FilterFactory;
+import org.roy.core.filter.GatewayFilterChainFactory;
 import org.roy.core.helper.AsyncHttpHelper;
 import org.roy.core.helper.RequestHelper;
 import org.roy.core.helper.ResponseHelper;
@@ -31,6 +33,7 @@ import java.util.concurrent.TimeoutException;
  */
 @Slf4j
 public class NettyCoreProcessor implements NettyProcessor {
+    private FilterFactory filterFactory= GatewayFilterChainFactory.getInstance();
     @Override
     public void process(HttpRequestWrapper wrapper) {
         //1.定义接口
@@ -38,6 +41,7 @@ public class NettyCoreProcessor implements NettyProcessor {
         ChannelHandlerContext context = wrapper.getContext();
         try {
             GatewayContext gatewayContext= RequestHelper.doContext(fullHttpRequest,context);
+            filterFactory.buildFilterChain(gatewayContext).doFilter(gatewayContext);
             route(gatewayContext);
         }catch (BaseException e){
             log.error("process error {} {}",e.getCode().getCode(),e.getCode().getCode());
