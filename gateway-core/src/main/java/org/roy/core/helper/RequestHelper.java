@@ -51,7 +51,7 @@ public class RequestHelper {
 				ctx,
 				HttpUtil.isKeepAlive(request),
 				gateWayRequest,
-				new Rule());
+				new Rule(),0);
 
 
 		//后续服务发现做完，这里都要改成动态的
